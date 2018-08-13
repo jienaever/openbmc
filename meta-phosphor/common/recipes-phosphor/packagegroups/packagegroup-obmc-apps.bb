@@ -39,6 +39,7 @@ SUMMARY_${PN}-extras = "Extra features"
 RDEPENDS_${PN}-extras = " \
         phosphor-rest \
         phosphor-dbus-monitor \
+        phosphor-systemd-policy \
         "
 
 SUMMARY_${PN}-extrasdev = "Development features"
@@ -97,6 +98,7 @@ ${PN}-software-extras = " \
 
 ${PN}-software-extras_df-obmc-ubi-fs = " \
         phosphor-image-signing \
+        phosphor-software-manager-updater-ubi \
         "
 
 SUMMARY_${PN}-software = "Software applications"

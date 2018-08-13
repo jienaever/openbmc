@@ -2,15 +2,15 @@ SUMMARY = "Phosphor Software Management"
 DESCRIPTION = "Phosphor Software Manager provides a set of system software \
 management daemons. It is suitable for use on a wide variety of OpenBMC \
 platforms."
-HOMEPAGE = "https://github.com/openbmc/phosphor-bmc-code-mgmt"
 PR = "r1"
-LICENSE = "Apache-2.0"
-LIC_FILES_CHKSUM = "file://${S}/LICENSE;md5=e3fc50a88d0a364313df4b21ef20c29e"
+
+require ${PN}.inc
 
 SOFTWARE_MGR_PACKAGES = " \
     ${PN}-version \
     ${PN}-download-mgr \
     ${PN}-updater \
+    ${PN}-updater-ubi \
     ${PN}-sync \
 "
 PACKAGE_BEFORE_PN += "${SOFTWARE_MGR_PACKAGES}"
@@ -24,10 +24,12 @@ SYSTEMD_PACKAGES = ""
 
 PACKAGECONFIG[verify_signature] = "--enable-verify_signature,--disable-verify_signature"
 PACKAGECONFIG[sync_bmc_files] = "--enable-sync_bmc_files,--disable-sync_bmc_files"
+PACKAGECONFIG[ubifs_layout] = "--enable-ubifs_layout"
 
 inherit autotools pkgconfig
 inherit obmc-phosphor-dbus-service
 inherit pythonnative
+inherit ${@bb.utils.contains('DISTRO_FEATURES', 'obmc-ubi-fs', 'phosphor-software-manager-ubi-fs', '', d)}
 
 DEPENDS += " \
     autoconf-archive-native \
@@ -52,23 +54,15 @@ RDEPENDS_${PN}-updater += " \
     phosphor-dbus-interfaces \
     sdbusplus \
     virtual-obmc-image-manager \
-    bash \
-"
-RDEPENDS_${PN}-updater_append_df-obmc-ubi-fs = " \
-    mtd-utils-ubifs \
 "
 
 RPROVIDES_${PN}-version += " \
     virtual-obmc-image-manager \
 "
 
-FILES_${PN}-version += "${sbindir}/phosphor-version-software-manager"
+FILES_${PN}-version += "${sbindir}/phosphor-version-software-manager ${exec_prefix}/lib/tmpfiles.d/software.conf"
 FILES_${PN}-download-mgr += "${sbindir}/phosphor-download-manager"
-FILES_${PN}-updater += " \
-    ${sbindir}/phosphor-image-updater \
-    ${sbindir}/obmc-flash-bmc \
-    /usr/local \
-    "
+FILES_${PN}-updater += "${sbindir}/phosphor-image-updater"
 FILES_${PN}-sync += " \
     ${sbindir}/phosphor-sync-software-manager \
     ${sysconfdir}/synclist \
@@ -78,45 +72,17 @@ DBUS_SERVICE_${PN}-download-mgr += "xyz.openbmc_project.Software.Download.servic
 DBUS_SERVICE_${PN}-updater += "xyz.openbmc_project.Software.BMC.Updater.service"
 DBUS_SERVICE_${PN}-sync += "xyz.openbmc_project.Software.Sync.service"
 
-SYSTEMD_SERVICE_${PN}-updater += " \
-    obmc-flash-bmc-ubirw.service \
-    obmc-flash-bmc-ubiro@.service \
-    obmc-flash-bmc-setenv@.service \
-    obmc-flash-bmc-ubirw-remove.service \
-    obmc-flash-bmc-ubiro-remove@.service \
-    usr-local.mount \
-    obmc-flash-bmc-ubiremount.service \
-    obmc-flash-bmc-updateubootvars@.service \
-    reboot-guard-enable.service \
-    reboot-guard-disable.service \
-    obmc-flash-bmc-cleanup.service \
-    obmc-flash-bmc-mirroruboot.service \
-    "
+SRC_URI += "file://software.conf"
 
-# Name of the mtd device where the ubi volumes should be created
-BMC_RW_MTD ??= "bmc"
-BMC_RO_MTD ??= "bmc"
-BMC_KERNEL_MTD ??= "bmc"
-BMC_RW_SIZE ??= "0x600000"
-SYSTEMD_SUBSTITUTIONS += "RW_MTD:${BMC_RW_MTD}:obmc-flash-bmc-ubirw.service"
-SYSTEMD_SUBSTITUTIONS += "RO_MTD:${BMC_RO_MTD}:obmc-flash-bmc-ubiro@.service"
-SYSTEMD_SUBSTITUTIONS += "KERNEL_MTD:${BMC_KERNEL_MTD}:obmc-flash-bmc-ubiro@.service"
-SYSTEMD_SUBSTITUTIONS += "RW_SIZE:${BMC_RW_SIZE}:obmc-flash-bmc-ubirw.service"
-
-SRC_URI += "file://obmc-flash-bmc"
-SRC_URI += "file://synclist"
 do_install_append() {
-    install -d ${D}${sbindir}
-    install -m 0755 ${WORKDIR}/obmc-flash-bmc ${D}${sbindir}/obmc-flash-bmc
-    install -d ${D}/usr/local
+    # /tmp/images is the software image upload directory.
+    # It should not be deleted since it is watched by the Image Manager
+    # for new images.
 
-    if [ -f ${WORKDIR}/build/phosphor-sync-software-manager ]; then
-        install -d ${D}${sysconfdir}
-        install -m 0644 ${WORKDIR}/synclist ${D}${sysconfdir}/synclist
+    if ${@bb.utils.contains('DISTRO_FEATURES','systemd','true', 'false', d)}; then
+        install -d ${D}${exec_prefix}/lib/tmpfiles.d
+        install -m 644 ${WORKDIR}/software.conf ${D}${exec_prefix}/lib/tmpfiles.d/
     fi
 }
-
-SRC_URI += "git://github.com/openbmc/phosphor-bmc-code-mgmt"
-SRCREV = "4b35dd31529e489b5f2f74c1d34900713c8032fc"
 
 S = "${WORKDIR}/git"

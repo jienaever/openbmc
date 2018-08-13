@@ -12,12 +12,18 @@ DEPENDS += "autoconf-archive-native"
 DEPENDS += "sdbusplus"
 DEPENDS += "phosphor-logging"
 DEPENDS += "phosphor-dbus-interfaces"
+DEPENDS += "boost"
 RDEPENDS_${PN} += "libsystemd"
 RDEPENDS_${PN} += "phosphor-logging"
 
+inherit useradd
+
+USERADD_PACKAGES = "${PN}"
+# add groups needed for privilege maintenance
+GROUPADD_PARAM_${PN} = "priv-admin; priv-operator; priv-user; priv-callback "
 
 DBUS_SERVICE_${PN} += "xyz.openbmc_project.User.Manager.service"
 
 SRC_URI += "git://github.com/openbmc/phosphor-user-manager"
-SRCREV = "3c166b39a5f5737de57b4543cddc3f0700e88d63"
+SRCREV = "10eb23f8d64d197dade920178b193c1979235156"
 S = "${WORKDIR}/git"

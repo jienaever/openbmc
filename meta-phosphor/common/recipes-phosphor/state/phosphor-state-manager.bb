@@ -52,6 +52,7 @@ RDEPENDS_${PN}-reset-sensor-states += "libsystemd phosphor-dbus-interfaces"
 FILES_${PN}-host = "${sbindir}/phosphor-host-state-manager"
 DBUS_SERVICE_${PN}-host += "xyz.openbmc_project.State.Host.service"
 DBUS_SERVICE_${PN}-host += "phosphor-reboot-host@.service"
+SYSTEMD_ENVIRONMENT_FILE_${PN}-host += "obmc/phosphor-reboot-host/reboot.conf"
 SYSTEMD_SERVICE_${PN}-host += "phosphor-reset-host-reboot-attempts@.service"
 
 FILES_${PN}-chassis = "${sbindir}/phosphor-chassis-state-manager"
@@ -135,6 +136,6 @@ HOST_RST_RBT_ATTEMPTS_SVC_FMT = "../${HOST_RST_RBT_ATTEMPTS_SVC}:${HOST_START_TG
 SYSTEMD_LINK_${PN}-host += "${@compose_list_zip(d, 'HOST_RST_RBT_ATTEMPTS_SVC_FMT', 'OBMC_HOST_INSTANCES', 'OBMC_HOST_INSTANCES')}"
 
 SRC_URI += "git://github.com/openbmc/phosphor-state-manager"
-SRCREV = "09568ff7d87186080b5cd3032e7ad4658c676eee"
+SRCREV = "9eab98618fb0e30b24be34e25817f849f5b5ac7b"
 
 S = "${WORKDIR}/git"

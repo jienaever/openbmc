@@ -35,7 +35,7 @@ SRC_URI += "git://github.com/openbmc/openpower-pnor-code-mgmt"
 
 SRC_URI += "file://obmc-flash-bios"
 
-SRCREV = "afd0a45c9771d640f7f8596b8d305dff2bbf98cf"
+SRCREV = "c39d923fee581533775e37be3f59f77c021718ee"
 
 do_install_append() {
         install -d ${D}${sbindir}
@@ -52,7 +52,6 @@ SYSTEMD_SERVICE_${PN} += " \
         obmc-flash-bios-ubipatch.service \
         obmc-flash-bios-ubiremount.service \
         obmc-flash-bios-updatesymlinks.service \
-        obmc-flash-bios-ubiclear@.service \
         obmc-flash-bios-cleanup.service \
         obmc-flash-bios-enable-clearvolatile@.service \
         obmc-flash-bios-check-clearvolatile@.service \
